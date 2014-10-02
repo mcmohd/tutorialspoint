@@ -1,0 +1,2124 @@
+========================
+Chapter-1: Introduction
+========================
+
+Sed stands for "Stream editor". It is simple yet powerful utility. Sed was developed between 1973 to 1974 by "Lee E. McMahon" of Bell Labs and today it runs on all major operating systems. McMahon wrote a general-purpose line-oriented editor, eventually which became sed. Sed borrowed syntax and many useful features from "ed" editor. Since its beginning it has support for regular expressions. Sed accepts input from file as well as pipe. Additionally it can also accepts input from standard input stream.
+
+GNU/Linux distributes the version of the "sed" which is written and maintained by the "Free Software Foundation(FSF)" and often referred as "GNU sed". Novice user may think sed's syntax is cryptic but once you are familiar with it then you can solve many complex tasks with few lines of sed script. This is the beauty of sed.
+
+
+* Typical uses of sed
+=======================
+
+Myriad of tasks can be done with sed. Following are just few of them:
+
+1) Text substitution.
+2) Selective printing of text files.
+3) In-a-place editing of text file.
+4) Non-interactive editing of text file and many more.
+
+
+* Installation using package manager
+======================================
+
+Generally sed is available by default on most GNU/Linux distributions. Use "which" command to identify whether it is present on your system or not. If not, then, to install sed on Debian based GNU/Linux use "apt" package manager as follows:
+
+[jerry]$ sudo apt-get install sed
+
+After installation ensure that sed is accessible via command line.
+
+[jerry]$ sed --version
+sed (GNU sed) 4.2.2
+Copyright (C) 2012 Free Software Foundation, Inc.
+License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>.
+This is free software: you are free to change and redistribute it.
+There is NO WARRANTY, to the extent permitted by law.
+
+Written by Jay Fenlason, Tom Lord, Ken Pizzini,
+and Paolo Bonzini.
+GNU sed home page: <http://www.gnu.org/software/sed/>.
+General help using GNU software: <http://www.gnu.org/gethelp/>.
+E-mail bug reports to: <bug-sed@gnu.org>.
+Be sure to include the word ``sed'' somewhere in the ``Subject:'' field.
+
+
+Similarly to install sed on RPM based GNU/Linux use "yum" package manager as follows:
+
+[root]# yum -y install sed
+
+After installation ensure that sed is accessible via command line.
+
+[root]# sed --version
+GNU sed version 4.2.1
+Copyright (C) 2009 Free Software Foundation, Inc.
+This is free software; see the source for copying conditions.  There is NO
+warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE,
+to the extent permitted by law.
+
+GNU sed home page: <http://www.gnu.org/software/sed/>.
+General help using GNU software: <http://www.gnu.org/gethelp/>.
+E-mail bug reports to: <bug-gnu-utils@gnu.org>.
+Be sure to include the word ``sed'' somewhere in the ``Subject:'' field.
+
+
+* Installation from source code
+================================
+One of the mighty advantage of the GNU/Linux system is; it's entirely free and open-source. Meaning you can download source code of any software package, make changes according to your requirements and optionally redistribute them. As GNU sed is part of the GNU project its source code is also available to download freely. We have already seen the installation of sed using package manager. Let us illustrate the installation of sed from its source code. Following installation steps are applicable to any GNU/Linux software, and for most other freely-available programs as well.
+
+Step-1) First download the source code from authentic place. "wget" command-line utility will serve the purpose.
+
+[jerry]$ wget ftp://ftp.gnu.org/gnu/sed/sed-4.2.2.tar.bz2
+--2014-07-19 22:32:21--  ftp://ftp.gnu.org/gnu/sed/sed-4.2.2.tar.bz2
+           => ‘sed-4.2.2.tar.bz2’
+Resolving ftp.gnu.org (ftp.gnu.org)... 208.118.235.20, 2001:4830:134:3::b
+Connecting to ftp.gnu.org (ftp.gnu.org)|208.118.235.20|:21... connected.
+Logging in as anonymous ... Logged in!
+==> SYST ... done.    ==> PWD ... done.
+==> TYPE I ... done.  ==> CWD (1) /gnu/sed ... done.
+==> SIZE sed-4.2.2.tar.bz2 ... 1059414
+==> PASV ... done.    ==> RETR sed-4.2.2.tar.bz2 ... done.
+Length: 1059414 (1.0M) (unauthoritative)
+
+100%[===========================================================================================================>] 10,59,414    306KB/s   in 4.0s   
+
+2014-07-19 22:32:30 (255 KB/s) - ‘sed-4.2.2.tar.bz2’ saved [1059414]
+
+
+Step-2) Then decompress and extract the downloaded source code.
+
+[jerry]$ ls
+sed-4.2.2.tar.bz2
+
+[jerry]$ tar xvf sed-4.2.2.tar.bz2 
+
+[jerry]$ ls
+sed-4.2.2  sed-4.2.2.tar.bz2
+
+
+Step-3) Change into the directory and run "configure".
+
+[jerry]$ cd sed-4.2.2/
+
+[jerry]$ ./configure
+
+
+Step-4) Upon successful completion "configure" generates Makefile. To compile source code issue "make" command.
+
+[jerry]$ make 
+
+Step-5) Optionally you can run test suite, to ensure the build is clean.
+
+[jerry]$ make check
+
+
+Step-6) Finally install the "sed" utility. Please ensure that you have superuser privileges.
+
+[jerry]$ sudo make install
+
+That's it we have successfully compiled and installed "sed". Verify it by running "sed" command.
+
+[jerry]$ sed --version
+sed (GNU sed) 4.2.2
+Copyright (C) 2012 Free Software Foundation, Inc.
+License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>.
+This is free software: you are free to change and redistribute it.
+There is NO WARRANTY, to the extent permitted by law.
+
+Written by Jay Fenlason, Tom Lord, Ken Pizzini,
+and Paolo Bonzini.
+GNU sed home page: <http://www.gnu.org/software/sed/>.
+General help using GNU software: <http://www.gnu.org/gethelp/>.
+E-mail bug reports to: <bug-sed@gnu.org>.
+Be sure to include the word ``sed'' somewhere in the ``Subject:'' field.
+
+
+=====================
+Chapter-2: Work flow
+=====================
+
+In this section we are going to explore how exactly sed works. To become expert sed user to know its internals is very important. Sed follows simple work flow: Read, Execute and Display. Below diagram depicts the work flow.
+
+=============> Please refer diagram sed.PNG <===============
+
+1) Read: Sed reads a line from input stream (file, pipe or stdin) and stores it into internal buffer called "w buffer".
+
+2) Execute: All sed commands are applied sequentially on the pattern buffer. By default sed commands are applied on all lines(globally) unless line addressing is specified.
+
+3) Display: Send the (modified) contents to the output stream. After sending data, the pattern buffer will be empty.
+
+Above process repeats until file is exhausted. Isn't sed work flow really simple ?
+
+
+* Few things to remember
+=========================
+Following are the few points to remember. This will help you to gain insights about sed.
+
+1) Pattern buffer is private, in-memory, volatile storage area used by sed.
+
+2) By default all sed commands are applied on the pattern buffer hence input file remains unchanged. GNU sed provide a way to modify the input file in-a-place. We will explore about it in latter sections.
+
+3) There is one more memory area called "hold buffer" which is also private, in-memory, volatile storage area. Data can be stored in this area for later retrieval. At the end of each cycle, sed removes the contents of the the pattern buffer but contents of the hold buffer remains persistent between sed cycles. However we cannot execute sed commands directly on hold buffer, hence sed allows to move data between hold and pattern buffer.
+
+4) Initially both pattern and hold buffers are empty.
+
+5) If input file is not provided then sed accepts input from standard input stream (stdin).
+
+6) If address range is not provided by default sed operates on each line.
+
+ 
+* Example
+==========
+
+Let us create a text file "quote.txt" which contains the quote of the famous author "Paulo Coelho".
+
+[jerry]$ vi quote.txt
+There is only one thing that makes a dream impossible to achieve: the fear of failure.
+	- Paulo Coelho, The Alchemist
+
+To understand the work flow of sed, let us display the contents of the file "quote.txt" using sed. This example simulates "cat" command.  
+
+[jerry]$ sed '' quote.txt 
+There is only one thing that makes a dream impossible to achieve: the fear of failure.
+	- Paulo Coelho, The Alchemist
+     
+In above examples, "quote.txt" is the input file name and before that there is a pair of single quote which implies the sed command. Let us demystify this operation.
+
+First sed reads a line from input file "quote.txt" and stores it into pattern buffer. Then it applied sed commands on pattern buffer. In our case sed command is absent hence no operation is performed on the pattern buffer. Finally it deletes and prints the contents of the pattern buffer on the standard output. Isn't it simple ?
+
+In below example sed accepts input from standard input stream.
+
+[jerry]$ sed '' <press enter>
+There is only one thing that makes a dream impossible to achieve: the fear of failure.
+There is only one thing that makes a dream impossible to achieve: the fear of failure.
+
+Here first line is entered through keyboard and second is the output generated by sed. To exit from sed session press ctrl-D (^D) character.
+
+
+=========================
+Chapter-3: Syntax of sed
+=========================
+
+By now we have basic idea about sed. Let us discuss the command-line syntax and various options provided by sed. Sed can be invoked in the following two forms:
+
+sed [-n] [-e] 'command(s)' files
+sed [-n] -f scriptfile files
+
+The first form allows to specify commands in-line surrounded within single quotes and latter allows to specify a script file which contains sed commands. However we can use both the forms together multiple times. Sed provides various command line options to control its behaviour below section illustrates that.
+
+Let us take a look at how we specify multiple sed commands. Sed provides "delete" command by using that we can delete certain lines. So let us delete line number 1, 2 and 5. For now ignore the details of the delete command in latter sections we will discuss more about delete command.
+
+First display the file contents using "cat" command.
+
+[jerry]$ cat books.txt 
+1) A Storm of Swords,George R. R. Martin,1216
+2) The Two Towers,J. R. R. Tolkien,352
+3) The Alchemist,Paulo Coelho,197
+4) The Fellowship of the Ring,J. R. R. Tolkien,432
+5) The Pilgrimage,Paulo Coelho,288
+6) A Game of Thrones,George R. R. Martin ,864
+
+Now instruct sed to remove only certain lines. Here to delete three lines we have specified three separate commands with "-e" option.
+
+[jerry]$ sed -e '1d' -e '2d' -e '5d' books.txt 
+3) The Alchemist,Paulo Coelho,197
+4) The Fellowship of the Ring,J. R. R. Tolkien,432
+6) A Game of Thrones,George R. R. Martin ,864
+
+Additionally we can write down multiple sed commands in a text file and provide these text file as a argument to sed. And sed can apply each command on the pattern buffer. Below simple example illustrates the second form of the sed.
+
+First create a text file which contains the sed commands. For simplicity we will use same sed commands.
+ 
+[jerry]$ echo -e "1d\n2d\n5d" > commands.txt
+
+[jerry]$ cat commands.txt 
+1d
+2d
+5d
+
+Now instruct sed to read commands from text file. Here we will achieve same result as above example.
+
+[jerry]$ sed -f commands.txt books.txt 
+3) The Alchemist,Paulo Coelho,197
+4) The Fellowship of the Ring,J. R. R. Tolkien,432
+6) A Game of Thrones,George R. R. Martin ,864
+
+
+* Standard options
+====================
+Sed supports following standard options:
+
+1) -n: This option suppress default printing of pattern buffer. For instance below sed command doesn't show any output.
+
+[jerry]$ sed -n '' quote.txt
+
+
+2) -e <cmd> : Next argument is an editing command. Here angular bracket implies mandatory parameter. By using this option we can specify multiple command. Let us print each line two times.
+
+[jerry]$ sed -e '' -e 'p' quote.txt
+There is only one thing that makes a dream impossible to achieve: the fear of failure.
+There is only one thing that makes a dream impossible to achieve: the fear of failure.
+	- Paulo Coelho, The Alchemist
+	- Paulo Coelho, The Alchemist
+
+3) -f <filename> : Next argument is a file containing editing commands. Here also angular bracket implies mandatory parameter. In below example we are specifying print command through file.
+
+[jerry]$ echo "p" > commands
+
+[jerry]$ sed -n -f commands quote.txt
+There is only one thing that makes a dream impossible to achieve: the fear of failure.
+	- Paulo Coelho, The Alchemist
+
+* GNU specific options
+=======================
+
+Let us quickly go through the GNU specific sed options. Please note that, these options are GNU specific and may not be supported by other variants of sed. In latter sections we will discuss these options in more details.
+
+1) -n, --quiet, --silent: Same as standard "-n" option.
+
+2) -e script, --expression=script: Same as standard "-e" option.
+
+3) -f script-file, --file=script-file: Same as standard "-f" option.
+
+4) --follow-symlinks: If this option is provided, sed follows the symbolic links while editing files in place. 
+
+5) -i[SUFFIX], --in-place[=SUFFIX]: This option is used to edit file in place. If suffix is provided, it takes backup of original file otherwise overwrites original file. 
+
+6) -l N, --line-lenght=N: This option sets the line length for the l command to N characters.
+
+7) --posix: This option disables all GNU extensions.
+
+8) -r, --regexp-extended: This option allows to use extended regular expressions instead basic one.
+
+9) -u, --unbuffered: When this option is provided sed loads minimal amounts of data from the input files and flushes the output buffers more often. It is useful for editing the output of "tail -f" when you don’t want to wait for the output.
+
+10) -z, --null-data: By default sed separates each line by new-line character. If this option is provided, it separate lines by NUL characters.
+
+
+====================================
+Chapter-4: Printing pattern buffer
+====================================
+
+One of the basic operation we perform on any file is display its contents. For this purpose we can use "print" command which prints the contents of the pattern buffer. So let us dig out more about pattern buffer.
+
+First create a file which contains the line number, name of the book, its author and number of pages. For our tutorials I will be using this file. You can use any text file according to your convenience. Our text file will look like this:
+
+[jerry]$ vi books.txt
+1) A Storm of Swords,George R. R. Martin,1216
+2) The Two Towers,J. R. R. Tolkien,352
+3) The Alchemist,Paulo Coelho,197
+4) The Fellowship of the Ring,J. R. R. Tolkien,432
+5) The Pilgrimage,Paulo Coelho,288
+6) A Game of Thrones,George R. R. Martin ,864
+
+
+
+Now, let us print the file contents.
+
+[jerry]$ sed 'p' books.txt
+1) A Storm of Swords,George R. R. Martin,1216
+1) A Storm of Swords,George R. R. Martin,1216
+2) The Two Towers,J. R. R. Tolkien,352
+2) The Two Towers,J. R. R. Tolkien,352
+3) The Alchemist,Paulo Coelho,197
+3) The Alchemist,Paulo Coelho,197
+4) The Fellowship of the Ring,J. R. R. Tolkien,432
+4) The Fellowship of the Ring,J. R. R. Tolkien,432
+5) The Pilgrimage,Paulo Coelho,288
+5) The Pilgrimage,Paulo Coelho,288
+6) A Game of Thrones,George R. R. Martin ,864
+6) A Game of Thrones,George R. R. Martin ,864
+
+
+What's wrong with sed ? Why each line is displayed two times ? Nothing is wrong with sed and it is working as expected. Let us demystify it.
+
+Do you remember the work flow of sed ? By default sed prints the contents of the pattern buffer and in command section we also specified print command explicitly, hence each line is printed twice. But don't worry. Sed had "-n" option which suppress the default printing of pattern buffer. Below command illustrates that.
+
+[jerry]$ sed -n 'p' books.txt 
+1) A Storm of Swords,George R. R. Martin,1216
+2) The Two Towers,J. R. R. Tolkien,352
+3) The Alchemist,Paulo Coelho,197
+4) The Fellowship of the Ring,J. R. R. Tolkien,432
+5) The Pilgrimage,Paulo Coelho,288
+6) A Game of Thrones,George R. R. Martin ,864
+
+
+Congratulations ! we got expected result. By default sed operates on all lines. But we can force sed to operate only on certain lines. For instance in below example sed only operates on 3rd line. In this example we have specified address range before sed command. 
+
+[jerry]$ sed -n '3p' books.txt 
+3) The Alchemist,Paulo Coelho,197
+
+
+Additionally we can also instruct sed to print only certain lines. For instance below example prints all lines from 2 to 5. Here we have used comma(,) operator to specify address range.
+
+[jerry]$ sed -n '2,5 p' books.txt 
+2) The Two Towers,J. R. R. Tolkien,352
+3) The Alchemist,Paulo Coelho,197
+4) The Fellowship of the Ring,J. R. R. Tolkien,432
+5) The Pilgrimage,Paulo Coelho,288
+
+
+There is also special character Dollar($) which represents the last line of the file. So let us print the last line of the file.
+
+[jerry]$ sed -n '$ p' books.txt 
+6) A Game of Thrones,George R. R. Martin ,864
+
+
+However we can also use Dollar($) character to specify address range. Below example prints through line 3 to last line.
+
+[jerry]$ sed -n '3,$ p' books.txt 
+3) The Alchemist,Paulo Coelho,197
+4) The Fellowship of the Ring,J. R. R. Tolkien,432
+5) The Pilgrimage,Paulo Coelho,288
+6) A Game of Thrones,George R. R. Martin ,864
+
+
+We have seen that how to specify address range using comma(,) operator. Sed supports two more operators which can be used to specify address range. First is plus(+) and it can be used with comm(,) operator. For instance "M, +n" will print next "n" lines starting from line number "M". Sounds confusing ? Let us see it with simple example. Below example prints next 4 lines from line number 2.
+
+[jerry]$ sed -n '2,+4 p' books.txt 
+2) The Two Towers,J. R. R. Tolkien,352
+3) The Alchemist,Paulo Coelho,197
+4) The Fellowship of the Ring,J. R. R. Tolkien,432
+5) The Pilgrimage,Paulo Coelho,288
+6) A Game of Thrones,George R. R. Martin ,864
+
+Optionally we can also specify address range using tilde(~) operator. It uses "M~n" form. It indicates that sed should start at line no "M" and process every n(th) line. For instance "50~5" matches line number 50, 55, 60, 65 and so on. Let us print only odd lines from the file.
+
+[jerry]$ sed -n '1~2 p' books.txt 
+1) A Storm of Swords,George R. R. Martin,1216
+3) The Alchemist,Paulo Coelho,197
+5) The Pilgrimage,Paulo Coelho,288
+
+Below example prints only even lines from the file.
+
+[jerry]$ sed -n '2~2 p' books.txt 
+2) The Two Towers,J. R. R. Tolkien,352
+4) The Fellowship of the Ring,J. R. R. Tolkien,432
+6) A Game of Thrones,George R. R. Martin ,864
+
+
+
+=========================
+Chapter-5: Pattern range
+=========================
+
+In previous chapter we used line numbers as a address range. Same as address range sed also supports pattern range. Pattern range can be a simple text or complex regular expression. In this section we will explore more about pattern matching. Without discussing much theory let us jump into example. Below example prints all the books of the author "Paulo Coelho".
+
+[jerry]$ sed -n '/Paulo/ p' books.txt 
+3) The Alchemist,Paulo Coelho,197
+5) The Pilgrimage,Paulo Coelho,288
+
+In above example sed operates on each line and print only those lines which matches the pattern "Paulo".
+
+We can also combine pattern range with address range. Below example prints lines starting from the 1st match of "Alchemist" until the 5th line.
+
+[jerry]$ sed -n '/Alchemist/, 5 p' books.txt 
+3) The Alchemist,Paulo Coelho,197
+4) The Fellowship of the Ring,J. R. R. Tolkien,432
+5) The Pilgrimage,Paulo Coelho,288
+
+
+We can use Dollar($) character to print all the lines after finding first occurrence of the pattern. Below example finds the first occurrence of the pattern "The" and immediately prints the remaining lines from the file. 
+
+[jerry]$ sed -n '/The/,$ p' books.txt 
+2) The Two Towers,J. R. R. Tolkien,352
+3) The Alchemist,Paulo Coelho,197
+4) The Fellowship of the Ring,J. R. R. Tolkien,432
+5) The Pilgrimage,Paulo Coelho,288
+6) A Game of Thrones,George R. R. Martin ,864
+
+We can also specify more than one pattern ranges using comm(,) operator. For instance below example prints all the lines that exists between pattern "Two" and "Pilgrimage".
+
+[jerry]$ sed -n '/Two/, /Pilgrimage/ p' books.txt 
+2) The Two Towers,J. R. R. Tolkien,352
+3) The Alchemist,Paulo Coelho,197
+4) The Fellowship of the Ring,J. R. R. Tolkien,432
+5) The Pilgrimage,Paulo Coelho,288
+
+
+Additionally we can also use plus(+) operator withing pattern range. Below example finds the first occurrence of the pattern "Two" and prints the next 4 lines after that.
+
+[jerry]$ sed -n '/Two/, +4 p' books.txt 
+2) The Two Towers,J. R. R. Tolkien,352
+3) The Alchemist,Paulo Coelho,197
+4) The Fellowship of the Ring,J. R. R. Tolkien,432
+5) The Pilgrimage,Paulo Coelho,288
+6) A Game of Thrones,George R. R. Martin ,864
+
+These are just few examples to get familiar with sed. You can always dig out more by trying few examples yourselves.
+
+
+==========================
+Chapter-6: Delete command
+==========================
+
+Sed provides various commands to manipulate text. In this session we are going to explore about delete command. Below is the syntax of the delete command. 
+
+[address1[,address2]]d
+
+"address1" and "address2" are the starting and ending address respectively which can be either line number or pattern string and both of these addresses are optional parameters.
+
+As name suggests delete command is used to perform delete operation and sed operates on line hence we can say that it is used to delete the line. Please note that delete command only removes line from pattern buffer i.e. line is not sent to the output stream and original file remains unchanged. Below simple example illustrates this.
+
+[jerry]$ sed 'd' books.txt
+
+What's wrong with the command ? Where is the output ? If line address is not provided, by default sed operates on every line. Hence it deletes all lines from the pattern buffer that is why command doesn't print anything of standard output.
+
+Let us instruct sed to operate only on certain line. Below example remove only 4th line.
+
+[jerry]$ sed '4d' books.txt 
+1) A Storm of Swords,George R. R. Martin,1216
+2) The Two Towers,J. R. R. Tolkien,352
+3) The Alchemist,Paulo Coelho,197
+5) The Pilgrimage,Paulo Coelho,288
+6) A Game of Thrones,George R. R. Martin ,864
+
+Additionally sed also accepts address range using comma. We can instruct sed to remove N1 to N2 lines. For instance below example deletes all the lines from 2 to 4.
+
+[jerry]$ sed '2, 4 d' books.txt 
+1) A Storm of Swords,George R. R. Martin,1216
+5) The Pilgrimage,Paulo Coelho,288
+6) A Game of Thrones,George R. R. Martin ,864
+
+Sed's address range is not only limited to the numbers. We can also specify pattern as a address. For instance below example removes all the books of author "Paulo Coelho".
+
+[jerry]$ sed '/Paulo Coelho/d' books.txt 
+1) A Storm of Swords,George R. R. Martin,1216
+2) The Two Towers,J. R. R. Tolkien,352
+4) The Fellowship of the Ring,J. R. R. Tolkien,432
+6) A Game of Thrones,George R. R. Martin ,864
+
+We can also specify address range using textual pattern. Below example removes all the lines between pattern "Storm" and "Fellowship".
+
+[jerry]$ sed '/Storm/,/Fellowship/d' books.txt 
+5) The Pilgrimage,Paulo Coelho,288
+6) A Game of Thrones,George R. R. Martin ,864
+
+In addition to this we can also use dollar($), plus(+) and tilde(~) operators with sed. We have seen usage of these operators in Chapter-4.
+
+
+==========================
+Chapter-7: Write command
+==========================
+One of the important operation we perform on any file is: backup i.e. we make another copy of the file. Sed provides the write command by using that we can store pattern buffer contents to the file. Below is the syntax of the write command which is similar to the delete command.
+
+[address1[,address2]]w file
+
+Here also "address1" and "address2" are the starting and ending address respectively which can be either line number or pattern string and both of these addresses are optional parameters.
+
+In above syntax "w" refers the command name i.e. write and "file" is the filename in which you willing to store contents. Please be careful with the "file" parameter. When filename is provided, sed creates a file on the fly if it is not present and if it exists it is overwritten.
+
+Let us make the exact the copy of the file using sed. Please note that there must be exact one space between "w" and "file". 
+
+[jerry]$ sed -n 'w books.bak' books.txt 
+
+We have created another file namely "books.bak". Now verify that both files are equal.
+
+[jerry]$ diff books.txt books.bak 
+
+[jerry]$ echo $?
+0
+
+You may think that "cp" command does exactly same thing. What is special about sed ? Yes ! cp command does exactly same thing but sed is more mature utility. We can create a file which contain only certain lines from source file. Let us store only even lines to the another file.
+
+[jerry]$ sed -n '2~2 w junk.txt' books.txt 
+
+[jerry]$ cat junk.txt 
+2) The Two Towers,J. R. R. Tolkien,352
+4) The Fellowship of the Ring,J. R. R. Tolkien,432
+6) A Game of Thrones,George R. R. Martin ,864
+
+You can also use comma(,), dollar($), plus(+) operator with write command.
+
+In addition to this sed also supports pattern matching with write command. Suppose you want to store all the books of individual authors into separate file. One of the boring and lengthy task is do it manually and other smarter way is use sed.
+
+[jerry]$ sed -n -e '/Martin/ w Martin.txt' -e '/Paulo/ w Paulo.txt' -e '/Tolkien/ w Tolkien.txt' books.txt 
+
+In above example, we are matching each line against pattern and storing matched line in a particular file. Isn't it simple ? To specify multiple command we have used "-e" switch of the sed command. Now let use see what each file contains.
+ 
+[jerry]$ cat Martin.txt 
+1) A Storm of Swords,George R. R. Martin,1216
+6) A Game of Thrones,George R. R. Martin ,864
+
+[jerry]$ cat Paulo.txt 
+3) The Alchemist,Paulo Coelho,197
+5) The Pilgrimage,Paulo Coelho,288
+
+[jerry]$ cat Tolkien.txt 
+2) The Two Towers,J. R. R. Tolkien,352
+4) The Fellowship of the Ring,J. R. R. Tolkien,432
+
+Indeed ! we got expected result. Isn't sed amazing utility ?
+
+
+
+================================
+Chapter-8: Substitute command
+================================
+
+Myriad of tasks can be done using sed and amazing thing about it is that sed can handle all these difficult tasks in easier way. We often perform text substitute operation, for instance "find" and "replace" operation in any text editor. In this session we are going to illustrate how sed performs text substitution. Below is the syntax of substitution command.
+
+[address1[,address2]]s/pattern/replacement/[flags]
+
+Here "address1" and "address2" are the starting and ending address respectively which can be either line number or pattern string and both of these addresses are optional parameters. "pattern" is the text which we want to replace with "replacement" string. Additionally we can also specify optional "flags" with sed.
+
+In our "books.txt" file we have used comma(,) to separate each column. Let us use vertical bar(|) to separate each column. To do this replace comma(,) with vertical bar(|). 
+
+[jerry]$ sed 's/,/ | /' books.txt 
+1) A Storm of Swords | George R. R. Martin,1216
+2) The Two Towers | J. R. R. Tolkien,352
+3) The Alchemist | Paulo Coelho,197
+4) The Fellowship of the Ring | J. R. R. Tolkien,432
+5) The Pilgrimage | Paulo Coelho,288
+6) A Game of Thrones | George R. R. Martin ,864
+
+If you observe carefully only first comma is replaced and second is as it is. Why this is happened ? As soon as pattern matches sed replaces it with replacement string and moves to the next line i.e. by default it replaces only first occurrence. To replace all occurrences, use global flag(g) with sed as follows:
+
+[jerry]$ sed 's/,/ | /g' books.txt 
+1) A Storm of Swords | George R. R. Martin | 1216
+2) The Two Towers | J. R. R. Tolkien | 352
+3) The Alchemist | Paulo Coelho | 197
+4) The Fellowship of the Ring | J. R. R. Tolkien | 432
+5) The Pilgrimage | Paulo Coelho | 288
+6) A Game of Thrones | George R. R. Martin  | 864
+
+Now all occurrences of commas(,) are replaced with vertical bar(|).
+
+We can also instruct sed to perform text substitution only when pattern match succeeds. For instance below example replaces comma(,) with vertical bar(|) only when line contains the pattern "The Pilgrimage".
+
+[jerry]$ sed '/The Pilgrimage/ s/,/ | /g' books.txt 
+1) A Storm of Swords,George R. R. Martin,1216
+2) The Two Towers,J. R. R. Tolkien,352
+3) The Alchemist,Paulo Coelho,197
+4) The Fellowship of the Ring,J. R. R. Tolkien,432
+5) The Pilgrimage | Paulo Coelho | 288
+6) A Game of Thrones,George R. R. Martin ,864
+
+In addition to this, sed can replace only Nth occurrence of the pattern. Let us replace only 2nd instance of comma(,) with vertical bar(|).
+
+[jerry]$ sed 's/,/ | /2' books.txt 
+1) A Storm of Swords,George R. R. Martin | 1216
+2) The Two Towers,J. R. R. Tolkien | 352
+3) The Alchemist,Paulo Coelho | 197
+4) The Fellowship of the Ring,J. R. R. Tolkien | 432
+5) The Pilgrimage,Paulo Coelho | 288
+6) A Game of Thrones,George R. R. Martin  | 864
+
+In above example number at the end of sed command(or at the place of "flag") implies the 2nd occurrence.
+
+There is one interesting feature provided by sed. After performing substitution we can see only changed lines. For this purpose sed provides "p" flag which refers to print. Below simple example list only those lines which are changed.
+
+[jerry]$ sed -n 's/Paulo Coelho/PAULO COELHO/p' books.txt 
+3) The Alchemist,PAULO COELHO,197
+5) The Pilgrimage,PAULO COELHO,288
+
+
+We can store changed lines in another file as well. To achieve this result use sed's "w" flag. Below simple example will give more idea about it.
+
+[jerry]$ sed -n 's/Paulo Coelho/PAULO COELHO/w junk.txt' books.txt 
+
+For simplicity we have used same sed command. Let us verify the contents of the "junk.txt" file.
+
+[jerry]$ cat junk.txt 
+3) The Alchemist,PAULO COELHO,197
+5) The Pilgrimage,PAULO COELHO,288
+  
+
+To perform case insensitive substitution use "i" flag which implies ignore case. Below example performs the case insensitive substitution.
+
+[jerry]$ sed  -n 's/pAuLo CoElHo/PAULO COELHO/pi' books.txt
+3) The Alchemist,PAULO COELHO,197
+5) The Pilgrimage,PAULO COELHO,288
+
+
+So far we used only slash(/) character as a delimiter but we can also use vertical bar(|), at sign(@), caret(^), exclamation mark(!) as a delimiter. Below simple example shows how to use other characters as a delimiters.
+
+Let us suppose you have to replace path "/bin/sed" with "/home/jerry/src/sed/sed-4.2.2/sed". So your sed command will look like this:
+
+[jerry]$ echo "/bin/sed" | sed 's/\/bin\/sed/\/home\/jerry\/src\/sed\/sed-4.2.2\/sed/'
+/home/jerry/src/sed/sed-4.2.2/sed
+ 
+Does above command look cryptic ? Can we make it easier to understand ? Yes ! Certainly we can do this. Let us use vertical bar(|) as delimiter and see the result.
+
+[jerry]$ echo "/bin/sed" | sed 's|/bin/sed|/home/jerry/src/sed/sed-4.2.2/sed|'
+/home/jerry/src/sed/sed-4.2.2/sed
+
+Indeed ! we got same result and the syntax is more readable. Similarly we can use at sign(@) as a delimiter as follows:
+
+[jerry]$ echo "/bin/sed" | sed 's@/bin/sed@/home/jerry/src/sed/sed-4.2.2/sed@'
+/home/jerry/src/sed/sed-4.2.2/sed
+
+In addition to this we can also use caret(^) as a delimiter.
+
+[jerry]$ echo "/bin/sed" | sed 's^/bin/sed^/home/jerry/src/sed/sed-4.2.2/sed^'
+/home/jerry/src/sed/sed-4.2.2/sed
+
+We can also use exclamation mark(!) as a delimiter as follow:
+
+[jerry]$ echo "/bin/sed" | sed 's!/bin/sed!/home/jerry/src/sed/sed-4.2.2/sed!'
+/home/jerry/src/sed/sed-4.2.2/sed
+
+Generally slash(/) is used as delimiter but sometimes it is more convenient to use other supported delimiters with sed.
+
+
+=====================
+Chapter-9: Use of &
+=====================
+
+Sed supports special character "&", whenever pattern match succeeds this special character stores the matched pattern. It is often used with substitution command. Let us illustrate how we can leverage this powerful feature.  
+
+In our "book.txt" file each line is numbered. Let us add word "Book number" at the beginning of each line. Below simple example illustrates this.
+
+[jerry]$ sed 's/[[:digit:]]/Book number &/' books.txt 
+Book number 1) A Storm of Swords,George R. R. Martin,1216
+Book number 2) The Two Towers,J. R. R. Tolkien,352
+Book number 3) The Alchemist,Paulo Coelho,197
+Book number 4) The Fellowship of the Ring,J. R. R. Tolkien,432
+Book number 5) The Pilgrimage,Paulo Coelho,288
+Book number 6) A Game of Thrones,George R. R. Martin ,864
+
+Thought it looks cryptic, this example is very simple. Let us demystify it.
+
+First we are searching for the first occurrence of digit which is line number(that is why we used [[:digit:]]) and sed automatically stores matched pattern in special character "&". And in second step we are pre-pending "Book number" word before each matched pattern i.e. before every line.
+
+Let us take one more example. In our "book.txt" file last digit implies the number of pages of the book. Let us add word "Pages =" before that. To do this find the last occurrence of the digit and replace it with "Pages = &", here "&" stores the matched pattern i.e. number of pages.
+
+[jerry]$ sed 's/[[:digit:]]*$/Pages = &/' books.txt 
+1) A Storm of Swords,George R. R. Martin,Pages = 1216
+2) The Two Towers,J. R. R. Tolkien,Pages = 352
+3) The Alchemist,Paulo Coelho,Pages = 197
+4) The Fellowship of the Ring,J. R. R. Tolkien,Pages = 432
+5) The Pilgrimage,Paulo Coelho,Pages = 288
+6) A Game of Thrones,George R. R. Martin ,Pages = 864
+
+For now just remember that "[[:digit:]]*$" finds the last occurrence of the digit. There is separate chapter on regular expressions. In this chapter we will explore more about regular expressions.
+
+
+================================
+Chapter-10: Creating substring
+================================
+
+In last chapter we have seen the power of "&" which stores matched text. Wouldn't it be greate if we can find substring from matched text. Sounds confusing ! Let us demystify it with simple example.
+
+Suppose we have following text:
+
+[jerry]$ echo "Three One Two"
+
+And we have to arrange it into sequence. Meaning it should first print "One" then "Two" and finally "Three". Below simple one liner will do needful.
+
+echo "Three One Two" | sed 's|\(\w\+\) \(\w\+\) \(\w\+\)|\2 \3 \1|'
+
+Please note that in above example for simplicity I have used vertical bar(|) as a delimiter.
+
+In sed, substrings can be specified by using grouping operator and must be prefixed with escape character i.e. "\(" and "\)". "\w" is a regular expression which matches any letter, digit, or underscore and "+" is used to match more than one characters. In other words regular expression "\(\w\+\) " matches the single word from the input string. In our input string there are 3 words separated by space hence there are three regular expressions separated by space. First regular expression stores first word i.e. "Three", second stores word "One" and third stores word "Two". These substrings are referred by "\N", where N is the substring number. So "\2" prints the second substring i.e. "One", "\3" prints the third substring i.e. "Two" and "\1" prints the first substring i.e. "Three". 
+
+Let us separate these words by commas(,) and modify the regular expression accordingly.
+
+[jerry]$ echo "Three,One,Two" | sed 's|\(\w\+\),\(\w\+\),\(\w\+\)|\2,\3,\1|'
+One,Two,Three
+
+Note that now there is comma(,) instead of space in regular expression.
+
+
+=====================================================
+Chapter-11: String replacement flags (GNU sed only)
+=====================================================
+In previous chapter we have seen some examples of substitution command. GNU sed provides some special escape sequences which can be used in the replacement string. Please note that these string replacement flags are GNU specific and may not work with other variants of sed. This chapter illustrates about the string replacement flags.
+
+1) "\l": When "\l" is specified in replacement string it treats immediate character after "\l" as a lowercase character. For instance below sed command will replace "Paulo" with "PAULO".
+
+[jerry]$ sed -n 's/Paulo/PAULO/p' books.txt 
+3) The Alchemist,PAULO Coelho,197
+5) The Pilgrimage,PAULO Coelho,288
+
+Now let us specify "\l" in the replacement string and observer the result.
+
+[jerry]$ sed -n 's/Paulo/\lPAUL\lO/p' books.txt 
+3) The Alchemist,pAULo Coelho,197
+5) The Pilgrimage,pAULo Coelho,288
+
+In above example "\l" is used before character 'P' and 'O', hence sed treats these characters as lowercase letters.
+
+2) "\L": When "\L" is specified in replacement string it treats all the remaining characters of the the word after "\L" as a lowercase characters. For instance in below example characters "ULO" are treated as lowercase characters.
+
+[jerry]$ sed -n 's/Paulo/PA\LULO/p' books.txt 
+3) The Alchemist,PAulo Coelho,197
+5) The Pilgrimage,PAulo Coelho,288
+
+
+3) "\u": When "\u" is specified in replacement string it treats immediate character after "\u" as a uppercase character. In below example "\u" is used before character 'a' and 'o', hence sed treats these characters as uppercase letters.
+
+[jerry]$ sed -n 's/Paulo/p\uaul\uo/p' books.txt 
+3) The Alchemist,pAulO Coelho,197
+5) The Pilgrimage,pAulO Coelho,288
+
+
+4) "\U": When "\U" is specified in replacement string it treats all the remaining characters of the the word after "\U" as a uppercase characters. For instance in below example all characters are treated as uppercase characters.
+
+[jerry]$ sed -n 's/Paulo/\Upaulo/p' books.txt 
+3) The Alchemist,PAULO Coelho,197
+5) The Pilgrimage,PAULO Coelho,288
+
+
+5) "\E": This flag should be used with "\L" or "\U". This flags stops the conversion initiated by the flag "\L" or "\U". In below example only first word is replaced with uppercase letters.
+
+[jerry]$ sed -n 's/Paulo Coelho/\Upaulo \Ecoelho/p' books.txt 
+3) The Alchemist,PAULO coelho,197
+5) The Pilgrimage,PAULO coelho,288
+
+
+============================
+Chapter-12: Append commands
+============================
+One of the most useful operation of any text editor is to provide append functionality. And of course sed supports this operation through append command. Below is the syntax of the append command.
+
+[address]a\
+Append text
+
+Let us append new book entry after line number 4. Below simple example will do needful.
+
+[jerry]$ sed '4 a 7) Adultry, Paulo Coelho, 234' books.txt 
+1) A Storm of Swords,George R. R. Martin,1216
+2) The Two Towers,J. R. R. Tolkien,352
+3) The Alchemist,Paulo Coelho,197
+4) The Fellowship of the Ring,J. R. R. Tolkien,432
+7) Adultry, Paulo Coelho, 234
+5) The Pilgrimage,Paulo Coelho,288
+6) A Game of Thrones,George R. R. Martin ,864
+
+In above example is command section "4" implies line number "a" is the append command and remaining is the text to be appended.
+
+
+Let us insert line at the end of the file. To do that use "$" as the address. Below simple example illustrates this.
+
+[jerry]$ sed '$ a 7) Adultry, Paulo Coelho, 234' books.txt 
+1) A Storm of Swords,George R. R. Martin,1216
+2) The Two Towers,J. R. R. Tolkien,352
+3) The Alchemist,Paulo Coelho,197
+4) The Fellowship of the Ring,J. R. R. Tolkien,432
+5) The Pilgrimage,Paulo Coelho,288
+6) A Game of Thrones,George R. R. Martin ,864
+7) Adultry, Paulo Coelho, 234
+
+Instead of line number we can also specify address using textual pattern. For instance below example appends text after matching pattern "The Alchemist".
+
+[jerry]$ sed '/The Alchemist/ a 7) Adultry, Paulo Coelho, 234' books.txt 
+1) A Storm of Swords,George R. R. Martin,1216
+2) The Two Towers,J. R. R. Tolkien,352
+3) The Alchemist,Paulo Coelho,197
+7) Adultry, Paulo Coelho, 234
+4) The Fellowship of the Ring,J. R. R. Tolkien,432
+5) The Pilgrimage,Paulo Coelho,288
+6) A Game of Thrones,George R. R. Martin ,864
+
+
+Note that if there are more than one pattern match then text is appended after each match. Below example illustrates this scenario.
+
+[jerry]$ sed '/The/ a 7) Adultry, Paulo Coelho, 234' books.txt 
+1) A Storm of Swords,George R. R. Martin,1216
+2) The Two Towers,J. R. R. Tolkien,352
+7) Adultry, Paulo Coelho, 234
+3) The Alchemist,Paulo Coelho,197
+7) Adultry, Paulo Coelho, 234
+4) The Fellowship of the Ring,J. R. R. Tolkien,432
+7) Adultry, Paulo Coelho, 234
+5) The Pilgrimage,Paulo Coelho,288
+7) Adultry, Paulo Coelho, 234
+6) A Game of Thrones,George R. R. Martin ,864
+
+
+============================
+Chapter-13: Change command
+============================
+
+Sed provides change or replace command which is represented by 'c'. This command permits replace existing line with new text. When line range is provided, all lines are replaced as group by single text line. Below is the syntax of the change command.
+
+[address1[,address2]]c\
+Replace text
+
+Below example replaces third line with new text.
+
+[jerry]$ sed '3 c 3) Adultry, Paulo Coelho, 324' books.txt 
+1) A Storm of Swords,George R. R. Martin,1216
+2) The Two Towers,J. R. R. Tolkien,352
+3) Adultry, Paulo Coelho, 324
+4) The Fellowship of the Ring,J. R. R. Tolkien,432
+5) The Pilgrimage,Paulo Coelho,288
+6) A Game of Thrones,George R. R. Martin ,864
+
+Instead of line number sed also accepts pattern as a address. In below example line is replace when pattern match succeeds.
+
+[jerry]$ sed '/The Alchemist/ c 3) Adultry, Paulo Coelho, 324' books.txt
+1) A Storm of Swords,George R. R. Martin,1216
+2) The Two Towers,J. R. R. Tolkien,352
+3) Adultry, Paulo Coelho, 324
+4) The Fellowship of the Ring,J. R. R. Tolkien,432
+5) The Pilgrimage,Paulo Coelho,288
+6) A Game of Thrones,George R. R. Martin ,864
+
+Sed also allows replacement of multiple lines with single line. Below example removes lines 4 to 6 and replaces it with new text.
+
+[jerry]$ sed '4, 6 c 4) Adultry, Paulo Coelho, 324' books.txt 
+1) A Storm of Swords,George R. R. Martin,1216
+2) The Two Towers,J. R. R. Tolkien,352
+3) The Alchemist,Paulo Coelho,197
+4) Adultry, Paulo Coelho, 324
+
+
+============================
+Chapter-14: Insert command
+============================
+In previous chapter we have seen the append command now let us explore about insert command which works exactly similar to the append command. The only difference is the it inserts line before specific position. Below is the syntax of the insert command:
+
+[address]i\
+Insert text
+
+Let us illustrate insert command with some simple examples. Below command inserts new entry before fourth line.
+
+[jerry]$ sed '4 i 7) Adultry, Paulo Coelho, 324' books.txt 
+1) A Storm of Swords,George R. R. Martin,1216
+2) The Two Towers,J. R. R. Tolkien,352
+3) The Alchemist,Paulo Coelho,197
+7) Adultry, Paulo Coelho, 324
+4) The Fellowship of the Ring,J. R. R. Tolkien,432
+5) The Pilgrimage,Paulo Coelho,288
+6) A Game of Thrones,George R. R. Martin ,864
+
+In above example "4" is the location number, "i" implies the insert command and remaining is the text to be inserted.
+
+To insert text at the start of file provide line address as "1". Below simple command illustrates this.
+
+[jerry]$ sed '1 i 7) Adultry, Paulo Coelho, 324' books.txt 
+7) Adultry, Paulo Coelho, 324
+1) A Storm of Swords,George R. R. Martin,1216
+2) The Two Towers,J. R. R. Tolkien,352
+3) The Alchemist,Paulo Coelho,197
+4) The Fellowship of the Ring,J. R. R. Tolkien,432
+5) The Pilgrimage,Paulo Coelho,288
+6) A Game of Thrones,George R. R. Martin ,864
+
+
+Additionally we can also insert multiple lines. Below command inserts 2 lines before the last line.
+
+[jerry]$ sed '$ i 7) Adultry, Paulo Coelho, 324\
+> 8) Eleven Minutes, Paulo Coelho, 304' books.txt
+1) A Storm of Swords,George R. R. Martin,1216
+2) The Two Towers,J. R. R. Tolkien,352
+3) The Alchemist,Paulo Coelho,197
+4) The Fellowship of the Ring,J. R. R. Tolkien,432
+5) The Pilgrimage,Paulo Coelho,288
+7) Adultry, Paulo Coelho, 324
+8) Eleven Minutes, Paulo Coelho, 304
+6) A Game of Thrones,George R. R. Martin ,864
+
+Please note that the lines to be inserted are entered on separate lines and delimited by slash(\) character. 
+
+==============================
+Chapter-15: Translate command
+==============================
+Sed provides a command to translate characters and it is represented as 'y'. It transform characters by position. Below is the syntax of sed's translate command:
+
+[address1[,address2]]y/list-1/list-2/
+
+Please note that translation is based on the position of the character from "list 1" to character in the same position in "list 2" and both lists must be explicit character lists. Regular expressions, character classes are unsupported. Additionally size of "list 1" and "list 2" must be same.
+
+Below example converts Arabic numbers to Roman numbers.
+
+[jerry]$ echo "1 5 15 20" | sed 'y/151520/IVXVXX/'
+I V IV XX
+
+
+==============================
+Chapter-16: = command
+==============================
+Sed's "=" command deals with the line numbers. Below is the syntax of the "=" command:
+
+[/pattern/]=
+[address1[,address2]]=
+
+"=" command writes the line number followed by its contents on the standard output stream. Below simple example illustrates this.
+
+[jerry]$ sed '=' books.txt 
+1
+1) A Storm of Swords,George R. R. Martin,1216
+2
+2) The Two Towers,J. R. R. Tolkien,352
+3
+3) The Alchemist,Paulo Coelho,197
+4
+4) The Fellowship of the Ring,J. R. R. Tolkien,432
+5
+5) The Pilgrimage,Paulo Coelho,288
+6
+6) A Game of Thrones,George R. R. Martin ,864
+
+
+Let us print the line numbers and the contents of the first 4 lines. Below command will print first 4 lines with line numbers and remaining without line numbers.
+
+[jerry]$ sed '1, 4=' books.txt 
+1
+1) A Storm of Swords,George R. R. Martin,1216
+2
+2) The Two Towers,J. R. R. Tolkien,352
+3
+3) The Alchemist,Paulo Coelho,197
+4
+4) The Fellowship of the Ring,J. R. R. Tolkien,432
+5) The Pilgrimage,Paulo Coelho,288
+6) A Game of Thrones,George R. R. Martin ,864
+
+Additionally we can instruct sed to print line number when pattern match succeeds. For instance below example prints line number which contains pattern "Paulo".
+
+[jerry]$ sed '/Paulo/ =' books.txt 
+1) A Storm of Swords,George R. R. Martin,1216
+2) The Two Towers,J. R. R. Tolkien,352
+3
+3) The Alchemist,Paulo Coelho,197
+4) The Fellowship of the Ring,J. R. R. Tolkien,432
+5
+5) The Pilgrimage,Paulo Coelho,288
+6) A Game of Thrones,George R. R. Martin ,864
+
+
+Let us do a interesting thing. Can you guess what below sed command does ?
+
+[jerry]$ sed -n '$ =' books.txt 
+6
+
+Yes ! you are right it counts the total number of lines present in the file. Let us demystify it. In command section we have used "$ =" which prints the line number of the last line followed by its contents. But we have also provided "-n" flag which suppresses the default printing of pattern buffer. Hence only last line number is displayed. Isn't it interesting ?   
+
+
+======================
+Chapter-17: l command
+======================
+Can you differentiate between words separated by spaces and words separated by tab character only by looking at them ? Certainly not. But sed can do this for you. Sed provides "l" command which displays the hidden characters for instance tab character with "\t" and End-Of-Line with "$" character. Below is the syntax of the "l" command.
+
+[address1[,address2]]l
+[address1[,address2]]l [len]    
+
+Let us create a file with tab character for demonstration. For simplicity we are going to use the same file, just replace spaces with tabs. Wait ! But how will you do that, by opening file in text editor and replacing each space with tab. Oh ! Come on ! We can use sed command for that.
+
+[jerry]$ sed 's/ /\t/g' books.txt > junk.txt
+
+Now let us display hidden characters by using "l" command.
+
+[jerry]$ sed -n 'l' junk.txt 
+1)\tA\tStorm\tof\tSwords,George\tR.\tR.\tMartin,1216$
+2)\tThe\tTwo\tTowers,J.\tR.\tR.\tTolkien,352$
+3)\tThe\tAlchemist,Paulo\tCoelho,197$
+4)\tThe\tFellowship\tof\tthe\tRing,J.\tR.\tR.\tTolkien,432$
+5)\tThe\tPilgrimage,Paulo\tCoelho,288$
+6)\tA\tGame\tof\tThrones,George\tR.\tR.\tMartin\t,864$
+
+Similar to other sed command it also accepts line numbers and patterns as a address. You can try it yourselves.
+
+Let us take close look at another interesting feature of sed. We can instruct sed to perform line wrapping after certain number of characters. For instance below example wrap lines after 25 characters.
+
+[jerry]$ sed -n 'l 25' books.txt 
+1) A Storm of Swords,Geo\
+rge R. R. Martin,1216$
+2) The Two Towers,J. R. \
+R. Tolkien,352$
+3) The Alchemist,Paulo C\
+oelho,197$
+4) The Fellowship of the\
+ Ring,J. R. R. Tolkien,4\
+32$
+5) The Pilgrimage,Paulo \
+Coelho,288$
+6) A Game of Thrones,Geo\
+rge R. R. Martin ,864$
+
+Please note that in above example wrap limit is provided after "l" command. In our case it is 25 characters. Please remembered that this option is GNU specific and may not work with other variants of sed.
+
+A wrap limit of 0 means never break the line unless there is new line character. Below simple command illustrates this.
+
+[jerry]$ sed -n 'l 0' books.txt 
+1) A Storm of Swords,George R. R. Martin,1216$
+2) The Two Towers,J. R. R. Tolkien,352$
+3) The Alchemist,Paulo Coelho,197$
+4) The Fellowship of the Ring,J. R. R. Tolkien,432$
+5) The Pilgrimage,Paulo Coelho,288$
+6) A Game of Thrones,George R. R. Martin ,864$ 
+
+
+========================
+Chapter-18: quit command
+========================
+
+Quit command instructs sed to quit current execution flow. It is represented by 'q' command. Below is the syntax of the quit command.
+
+[address]q
+[address]q [value]
+
+Please note that quit command doesn't work with range of addresses, it only supports single address. By default sed command follows read, execute and repeat work flow but when quit command encounters it simply stops the current execution.
+
+Let us print first 3 lines from the file.
+
+[jerry]$ sed '3 q' books.txt 
+1) A Storm of Swords,George R. R. Martin,1216
+2) The Two Towers,J. R. R. Tolkien,352
+3) The Alchemist,Paulo Coelho,197
+
+Instead of line number we can also use textual pattern. For instance below command quits when pattern match succeeds.
+
+[jerry]$ sed '/The Alchemist/ q' books.txt 
+1) A Storm of Swords,George R. R. Martin,1216
+2) The Two Towers,J. R. R. Tolkien,352
+3) The Alchemist,Paulo Coelho,197
+
+In addition to this sed can also accepts a "value" which can be used as the exit status. For instance below command shows its exit status as 100.
+
+[jerry]$ sed '/The Alchemist/ q 100' books.txt 
+1) A Storm of Swords,George R. R. Martin,1216
+2) The Two Towers,J. R. R. Tolkien,352
+3) The Alchemist,Paulo Coelho,197
+
+[jerry]$ echo $?
+100
+
+=========================
+Chapter-19: read command
+=========================
+We can instruct sed command to read a file contents and display it when specific condition matches. The command is represented by letter 'r'. Below is the syntax of read command.
+
+[address]r file
+
+Note that there must be exactly one space between 'r' command and file name.
+
+Let us illustrate it with simple example. First create a sample file called "junk.txt".
+
+[mickey]$ echo "This is junk text." > junk.txt
+
+Now below command instructs the sed to read the contents of "junk.txt" and insert it after third line.
+
+[mickey]$ sed '3 r junk.txt' books.txt 
+1) A Storm of Swords,George R. R. Martin,1216
+2) The Two Towers,J. R. R. Tolkien,352
+3) The Alchemist,Paulo Coelho,197
+This is junk text.
+4) The Fellowship of the Ring,J. R. R. Tolkien,432
+5) The Pilgrimage,Paulo Coelho,288
+6) A Game of Thrones,George R. R. Martin ,864
+
+In above example 3 implies the line address, "r" is the command name and "junk.txt" is the file name whose contents to be displayed. Additionally GNU sed also accepts a range of address. For instance below command inserts contents of "junk.txt" file after third, fourth and fifth line.
+
+[mickey]$ sed '3, 5 r junk.txt' books.txt 
+1) A Storm of Swords,George R. R. Martin,1216
+2) The Two Towers,J. R. R. Tolkien,352
+3) The Alchemist,Paulo Coelho,197
+This is junk text.
+4) The Fellowship of the Ring,J. R. R. Tolkien,432
+This is junk text.
+5) The Pilgrimage,Paulo Coelho,288
+This is junk text.
+6) A Game of Thrones,George R. R. Martin ,864
+
+Like other sed commands, "read" command also accepts pattern as a address. For instance below command inserts a contents of "junk.txt" file when pattern match succeeds.
+
+[mickey]$ sed '/Paulo/ r junk.txt' books.txt 
+1) A Storm of Swords,George R. R. Martin,1216
+2) The Two Towers,J. R. R. Tolkien,352
+3) The Alchemist,Paulo Coelho,197
+This is junk text.
+4) The Fellowship of the Ring,J. R. R. Tolkien,432
+5) The Pilgrimage,Paulo Coelho,288
+This is junk text.
+6) A Game of Thrones,George R. R. Martin ,864
+
+=============================
+Chapter-20: execute command
+=============================
+
+Sed supports wide range of scenarios. We can also execute external command from sed. To serve the purpose we can use sed's execute command. It is represented by "e". Below is the syntax of the execute command.
+
+[address1[,address2]]e [command]
+
+Let us illustrate execute command with simple example. Below sed commands executes UNIX "date" command before third line.
+
+[mickey]$ sed '3 e date' books.txt 
+1) A Storm of Swords,George R. R. Martin,1216
+2) The Two Towers,J. R. R. Tolkien,352
+Sun Sep  7 18:04:49 IST 2014
+3) The Alchemist,Paulo Coelho,197
+4) The Fellowship of the Ring,J. R. R. Tolkien,432
+5) The Pilgrimage,Paulo Coelho,288
+6) A Game of Thrones,George R. R. Martin ,864
+
+Like other commands sed also accepts pattern as a address. For example, below example executes "date" command when pattern match succeeds. Please note that after pattern match first command is executed and then contents of the pattern buffer are displayed.
+
+[mickey]$ sed '/Paulo/ e date' books.txt 
+1) A Storm of Swords,George R. R. Martin,1216
+2) The Two Towers,J. R. R. Tolkien,352
+Sun Sep  7 18:06:04 IST 2014
+3) The Alchemist,Paulo Coelho,197
+4) The Fellowship of the Ring,J. R. R. Tolkien,432
+Sun Sep  7 18:06:04 IST 2014
+5) The Pilgrimage,Paulo Coelho,288
+6) A Game of Thrones,George R. R. Martin ,864
+
+If you observe syntax of "e" command carefully, you will notice that "command" is optional. When command is not provided after "e". then it treats pattern buffer contents as a external command. To illustrate this, let us create a "commands.txt" file with few simple commands. 
+
+[mickey]$ echo -e "date\ncal\nuname" > commands.txt 
+
+[mickey]$ cat commands.txt 
+date
+cal
+uname
+
+Commands from the file are self explanatory. In absence of "command" after "e", sed execute all these commands one by one. Below simple example illustrates this.
+
+[mickey]$ sed 'e' commands.txt 
+Sun Sep  7 18:14:20 IST 2014
+   September 2014     
+Su Mo Tu We Th Fr Sa  
+    1  2  3  4  5  6  
+ 7  8  9 10 11 12 13  
+14 15 16 17 18 19 20  
+21 22 23 24 25 26 27  
+28 29 30              
+                      
+Linux
+
+Like other sed commands, execute command also accepts all valid ranges of addresses.
+
+=============================================
+Chapter-21: managing pattern and hold buffer
+=============================================
+We have already seen the use of pattern and hold buffer. In this section we are going to explore more about its usage. But before that let us discuss the "n" command which prints the pattern space. It will be used in conjunction with other commands. Below is the syntax of the "n" command.
+
+[address1[,address2]]n
+
+[mickey]$ sed 'n' books.txt 
+1) A Storm of Swords,George R. R. Martin,1216
+2) The Two Towers,J. R. R. Tolkien,352
+3) The Alchemist,Paulo Coelho,197
+4) The Fellowship of the Ring,J. R. R. Tolkien,432
+5) The Pilgrimage,Paulo Coelho,288
+6) A Game of Thrones,George R. R. Martin ,864
+
+Sed "n" command prints the contents of the pattern buffer, clears the the pattern buffer, fetches the next line into pattern buffer and applies command on the pattern buffer.
+
+Let us suppose there are three sed commands before "n" and two sed commands after "n" as follows:
+
+Sed command #1
+Sed command #2
+Sed command #3
+n command
+Sed command #4
+Sed command #5
+
+Then sed applies command 1 to 3 on pattern buffer, clears the pattern buffer, fetches the next line into pattern buffer and applies command 4 and 5 on pattern buffer. Please note that this is very important concept. If you don't get it first please go through it once more.
+
+Hold buffer holds data but sed commands cannot be applied directly on hold buffer, hence we need to bring hold buffer data into pattern buffer. Sed provides "x" command to exchange contents of pattern and hold buffer. Below commands illustrates the "x" command.
+
+Let us slightly modify our "books.txt" file. Now file contains book title followed by its author name. After modification our file will look like this:
+
+[mickey]$ cat books.txt 
+A Storm of Swords
+George R. R. Martin
+The Two Towers
+J. R. R. Tolkien
+The Alchemist
+Paulo Coelho
+The Fellowship of the Ring
+J. R. R. Tolkien
+The Pilgrimage
+Paulo Coelho
+A Game of Thrones
+George R. R. Martin  
+
+Let us exchange the contents of the two buffer. For instance below example prints only names of author. 
+
+[mickey]$ sed -n 'x;n;p' books.txt 
+George R. R. Martin
+J. R. R. Tolkien
+Paulo Coelho
+J. R. R. Tolkien
+Paulo Coelho
+George R. R. Martin 
+
+Let us understand how this command works. Initially sed reads first line i.e. "A Storm of Swords" into pattern buffer, "x" command moves this line to hold buffer, "n" fetches the next line i.e. "George R. R. Martin" into pattern buffer and control passes to the command followed by "n" which prints the contents of the pattern buffer and the process repeats until file is exhausted.
+
+Now let us exchange the contents of buffer before printing. Guess what will happen ? Yes you are right it will print the titles of book.
+
+[mickey]$ sed -n 'x;n;x;p' books.txt 
+A Storm of Swords
+The Two Towers
+The Alchemist
+The Fellowship of the Ring
+The Pilgrimage
+A Game of Thrones
+
+Sed's "h" command deals with hold buffer. "h" command copies data from pattern buffer to hold buffer. Existing data from hold buffer gets overwritten. Please note that "h" command doesn't move data only copies data hence copied data remains as it is into pattern buffer. Below is the syntax of "h" command.
+
+[address1[,address2]]h
+
+Below command prints only the titles of author "Paulo Coelho".
+
+[mickey]$ sed -n '/Paulo/!h; /Paulo/{x;p}' books.txt 
+The Alchemist
+The Pilgrimage
+
+Let us understand how above command works. Our "books.txt" file has specific format, first line is book title and immediately next line is the author of the book. In above command "!" is used to reverse the condition i.e. line is copied to the hold buffer only when pattern match doesn't succeed. And {} is used to group multiple sed commands.
+
+Initially sed reads first line i.e. "A Storm of Swords" into pattern space and checks whether it contains pattern "Paulo" or not. As pattern match doesn't succeed it copies this line to hold buffer. Now in both pattern and hold buffer we have same line i.e. "A Storm of Swords". In second step it check whether line contains pattern "Paulo" or not. As pattern match doesn't succeed it doesn't do anything this is the first pass of the command.
+
+In second pass it reads next line i.e. "George R. R. Martin" into pattern space and applies same steps. For next three lines i.e. "The Two Towers" and "J. R. R. Tolkien" and "The Alchemist" it does the same thing. Now at the end of fifth pass both pattern and hold buffer contains data "The Alchemist", at the start of sixth pass it reads line "Paulo Coelho" and as pattern match succeeds, it doesn't copy this line into hold buffer. So in pattern buffer contains "Paulo Coelho" and hold buffer contains "The Alchemist", after that it checks whether pattern buffer contains pattern "Paulo". As pattern match succeeds it exchanges the contents of the pattern buffer with hold buffer. i.e. now pattern buffer contains "The Alchemist" and hold buffer contains "Paulo Coelho". And finally it prints the contents of the pattern buffer. Same steps are applied to pattern "The Pilgrimage".
+
+
+Sed's "h" command destroys the previous contents of the hold buffer this is not always acceptable, sometimes we need to preserve the contents. For this purpose sed provides "H" command which appends the contents to the hold buffer by adding a new line at the end. The only difference between "h" and "H" command is former overwrites the data from hold buffer while latter append the data to hold buffer. It's syntax is similar to "h" command.
+
+[address1[,address2]]H
+
+Let us take above example, but now this time instead of printing only book titles also print the name of its author. For instance below example prints the book title followed by author name.
+
+[mickey]$ sed -n '/Paulo/!h; /Paulo/{H;x;p}' books.txt 
+The Alchemist
+Paulo Coelho
+The Pilgrimage
+Paulo Coelho
+
+Let us understand its working. First sed command is same as previous example. At the end of fifth pass both pattern and hold buffer contains "The Alchemist", at the start of sixth pass it reads line "Paulo Coelho" and as pattern match succeeds hence it doesn't copy this line into hold buffer. So in pattern space contains "Paulo Coelho" and hold space contains "The Alchemist", after that it checks whether pattern space contains pattern "Paulo" as pattern match succeeds it append this line to hold buffer. Hence hold buffer contains "The Alchemist\nPaulo Coelho" (newline character is added by "H" command). The next command exchanges the contents of the pattern buffer with hold buffer and finally it prints the contents of the pattern buffer. Same steps are applied to pattern "The Pilgrimage".
+
+We have seen how to copy/append pattern buffer to hold buffer. Can we do it in reverse fashion also ? Yes certainly ! For that purpose sed provides "g" command which copies data from hold buffer to pattern buffer. While copying, existing data from pattern space gets overwritten. Below is the syntax of "g" command.
+
+[address1[,address2]]g
+
+For simplicity we will take same example - printing book titles and its author. But this time, first we will print the name of the author and in next line its book title. For instance below command prints the name of author "Paulo Coelho" followed by its book title.
+
+[mickey]$ sed -n '/Paulo/!h; /Paulo/{p;g;p}' books.txt 
+Paulo Coelho
+The Alchemist
+Paulo Coelho
+The Pilgrimage
+
+For simplicity I have kept first command as it is. Now at the end of fifth pass both pattern and hold buffer contains "The Alchemist", at the start of sixth pass it reads line "Paulo Coelho" and as pattern match succeeds it doesn't copy this line into hold buffer. So in pattern space contains "Paulo Coelho" and hold space contains "The Alchemist", after that it checks whether pattern space contains pattern "Paulo". As pattern match succeeds it first prints the contents of the pattern space i.e. "Paulo Coelho", then it copies hold buffer to the pattern buffer hence both pattern and hold buffer contains "The Alchemist". And finally it prints the contents of the pattern buffer. Same steps are applied to pattern "The Pilgrimage".
+
+Similarly we can append the contents from hold buffer to pattern buffer. Sed provides "G" command which appends the contents to the pattern buffer by adding a new line at the end. The only difference between "g" and "G" command is former overwrites the data from pattern buffer while latter append the data to pattern buffer. Its syntax is same as "g" command.   
+
+[address1[,address2]]G
+
+Now let us take previous example which prints the name of author "Paulo Coelho" followed by its book title. To achieve the same result execute below sed command.
+
+[mickey]$ sed -n '/Paulo/!h; /Paulo/{G;p}' books.txt 
+Paulo Coelho
+The Alchemist
+Paulo Coelho
+The Pilgrimage
+
+For simplicity I have kept first command as it is. Now at the end of fifth pass both pattern and hold buffer contains "The Alchemist", at the start of sixth pass it reads line "Paulo Coelho" and as pattern match succeeds it doesn't copy this line into hold buffer. So in pattern space contains "Paulo Coelho" and hold space contains "The Alchemist", after that it checks whether pattern space contains pattern "Paulo". As pattern match succeeds it appends data to the pattern buffer hence hold space contains "The Alchemist" and pattern space contains "Paulo Coelho\nThe Alchemist" (newline character is added by the "G" command). And finally it prints the contents of the pattern buffer. Same steps are applied to pattern "The Pilgrimage".
+
+Can you modify above example to display the book titles followed by its author ? Yes you are right ! Just exchange the buffer contents before "G" command. Isn't it simple ?
+
+[mickey]$ sed -n '/Paulo/!h; /Paulo/{x;G;p}' books.txt 
+The Alchemist
+Paulo Coelho
+The Pilgrimage
+Paulo Coelho
+
+
+===================================
+Chapter-22: Miscellaneous commands
+===================================
+
+By default sed operates on single line. But it is capable of operating on multi-lines. Multi-line commands are denote by uppercase letters. For instance unlike "n" command "N" command doesn't clear and print the pattern space, instead, it adds a newline (\n) at the end of the current pattern space and appends the next line from the input-file to the current pattern space. And continues with the sed's standard flow by executing the rest of the sed commands. Below is the syntax of "N" command.
+
+[address1[,address2]]N
+
+Let us print comma separated list of book titles and its author. Below simple example illustrates this.
+
+[mickey]$ sed 'N; s/\n/, /g' books.txt 
+A Storm of Swords, George R. R. Martin
+The Two Towers, J. R. R. Tolkien
+The Alchemist, Paulo Coelho
+The Fellowship of the Ring, J. R. R. Tolkien
+The Pilgrimage, Paulo Coelho
+A Game of Thrones, George R. R. Martin 
+
+Let us understand how above example works. "N" command reads first line i.e. "A Storm of Swords" into pattern buffer and appends "\n" followed by next line i.e. now pattern space contains "A Storm of Swords\nGeorge R. R. Martin". In next step we are replacing newline with comma.
+
+Like "p" command there is also "P" command which prints the first part(up to embedded newline) of multi-line pattern space created by N command. Below is the syntax of "P" command which is similar to "p" command.
+
+[address1[,address2]]P
+
+In previous example we have seen that "N" command create newline separated list of book titles and its author. Let us print only first part of it i.e. only titles of the book. Below simple command illustrates this scenario.
+
+[mickey]$ sed -n 'N;P' books.txt 
+A Storm of Swords
+The Two Towers
+The Alchemist
+The Fellowship of the Ring
+The Pilgrimage
+A Game of Thrones
+
+Please note that in absence of "N" it behaves same as "p" command. Below simple command illustrates this scenario.
+
+[mickey]$ sed -n 'P' books.txt 
+A Storm of Swords
+George R. R. Martin
+The Two Towers
+J. R. R. Tolkien
+The Alchemist
+Paulo Coelho
+The Fellowship of the Ring
+J. R. R. Tolkien
+The Pilgrimage
+Paulo Coelho
+A Game of Thrones
+George R. R. Martin 
+
+In addition to this sed also provides "v" command which checks for version. If provided version is greater than installed sed version then command execution fails. Please note that this option is GNU sed specific and may not work with other variants of sed. Below is syntax of the "v" command.
+
+[address1[,address2]]v [version]
+
+
+First find out the current version of sed.
+
+[mickey]$ sed --version
+sed (GNU sed) 4.2.2
+
+In below example provided sed version is greater than version 4.2.2 hence sed command aborts its execution.
+
+[mickey]$ sed 'v 4.2.3' books.txt 
+sed: -e expression #1, char 7: expected newer version of sed
+
+
+But if provided version is lesser than or equal to the version 4.2.2 then command works as expected.
+
+[mickey]$ sed 'v 4.2.2' books.txt 
+A Storm of Swords
+George R. R. Martin
+The Two Towers
+J. R. R. Tolkien
+The Alchemist
+Paulo Coelho
+The Fellowship of the Ring
+J. R. R. Tolkien
+The Pilgrimage
+Paulo Coelho
+A Game of Thrones
+George R. R. Martin
+
+
+=======================================
+Chapter-23: Loops and branches in sed
+=======================================
+
+Like other programming languages sed also provides a looping and branching constrain to control the execution flow. In this chapter we going to explore more about how to use loops and branches in sed.
+
+Loops in sed works similar to "goto" statement. Sed can jump to the line marked by label and continues the execution of the remaining commands. In sed we can define "label" as follows:
+
+:label
+:start
+:end
+:up
+
+In above example a name after colon(:) implies the label name.
+
+To jump to specific label we can use sed's "b" command followed by label name. If label name is omitted then sed jumps to the end of the sed file.
+
+Let us write simple sed script to understand the loops and branches. In our "books.txt" file there are several entries of book title and its author. Below simple example combines a book title and its author name in one line separated by comma. Then it searches for pattern "Paulo", if pattern match succeeds it prints hyphen(-) in front of the line otherwise jumps to the "Print" label which just prints the line. 
+
+
+[mickey]$ sed -n '
+h;n;H;x
+s/\n/, /
+/Paulo/!b Print
+s/^/- /
+:Print
+p' books.txt
+A Storm of Swords, George R. R. Martin
+The Two Towers, J. R. R. Tolkien
+- The Alchemist, Paulo Coelho
+The Fellowship of the Ring, J. R. R. Tolkien
+- The Pilgrimage, Paulo Coelho
+A Game of Thrones, George R. R. Martin 
+
+At first look above script may look cryptic, so let us demystify this. The first two commands are self explanatory "h;n;H;x" and "s/\n/, /" combines the book title and its author separated by comma(,). The third command jumps to the label "Print" only when pattern match doesn't succeed otherwise substitution is performed by fourth command. ":Print" is just label name and as you already know "p" is the print command.
+
+
+To improve readability I have written each sed command on separate line otherwise we could have written in one line as follows:
+
+[mickey]$ sed -n 'h;n;H;x;s/\n/, /;/Paulo/!b Print; s/^/- /; :Print;p' books.txt
+A Storm of Swords, George R. R. Martin
+The Two Towers, J. R. R. Tolkien
+- The Alchemist, Paulo Coelho
+The Fellowship of the Ring, J. R. R. Tolkien
+- The Pilgrimage, Paulo Coelho
+A Game of Thrones, George R. R. Martin 
+
+
+Additionally we can also create loops using "t" command. "t" command jumps to the label only if the previous substitute command was successful. For demonstration I am going to use same example as above but instead of printing single hyphen(-) now we will print four hyphens. Below simple example illustrates the usage of the "t" command.
+
+[mickey]$ sed -n '
+h;n;H;x
+s/\n/, /
+:Loop
+/Paulo/s/^/-/
+/----/!t Loop
+p' books.txt
+A Storm of Swords, George R. R. Martin
+The Two Towers, J. R. R. Tolkien
+----The Alchemist, Paulo Coelho
+The Fellowship of the Ring, J. R. R. Tolkien
+----The Pilgrimage, Paulo Coelho
+A Game of Thrones, George R. R. Martin 
+
+
+In above example first two commands are self explanatory. The third command defines a label "Loop". Fourth command prepends hyphen(-) if line contains the pattern "Paulo" and t command repeats the procedure until there are four hyphens at the beginning of the line.
+
+
+To improve readability I have written each sed command on separate line otherwise we could have written sed one liner as follows:
+
+[mickey]$ sed -n 'h;n;H;x; s/\n/, /; :Loop; /Paulo/s/^/-/; /----/!t Loop; p' books.txt
+A Storm of Swords, George R. R. Martin
+The Two Towers, J. R. R. Tolkien
+----The Alchemist, Paulo Coelho
+The Fellowship of the Ring, J. R. R. Tolkien
+----The Pilgrimage, Paulo Coelho
+A Game of Thrones, George R. R. Martin 
+
+
+================================
+Chapter-24: Regular expressions
+================================
+It is the regular expressions which makes sed more interesting and powerful. Myriad of complex task can be solved with regular expression. Any command-line junkie knows the power of the regular expression.
+
+Like many other GNU/Linux utilities sed also supports regular expressions(often referred as regex). This chapter describes the regular expressions in detail. The chapter is divided into three sections. First section discusses "Standard regular expressions", second section discusses "POSIX classes of regular expressions" and finally there is discussion about "Meta characters". So let us get our hands dirty with regular expressions.
+
+* Standard regular expressions
+===============================
+
+1) Start of line (^)
+
+In regular expressions terminology, the caret(^) symbol matches the start of line. For instance below example prints all the lines which starts with pattern "The".
+
+[mickey]$ sed -n '/^The/ p' books.txt 
+The Two Towers, J. R. R. Tolkien
+The Alchemist, Paulo Coelho
+The Fellowship of the Ring, J. R. R. Tolkien
+The Pilgrimage, Paulo Coelho
+
+
+2) End of line ($)
+
+Similarly end of line is represented by the dollar($) symbol. Below example prints the lines which end with "Coelho".
+
+[mickey]$ sed -n '/Coelho$/ p' books.txt 
+The Alchemist, Paulo Coelho
+The Pilgrimage, Paulo Coelho
+
+
+3) Single character (.)
+
+Dot(.) matches any single character except end of line character. For instance below example prints all three letter words which ends with character "t".
+
+[mickey]$ echo -e "cat\nbat\nrat\nmat\nbatting\nrats\nmats" | sed -n '/^..t$/p'
+cat
+bat
+rat
+mat
+
+
+4) Match character set ([])
+
+In regular expression terminology character set is represented by square brackets([]). It is used to match only one out of several
+characters. For instance below example matches pattern "Call" and "Tall" but not "Ball".
+
+[mickey]$ echo -e "Call\nTall\nBall" | sed -n '/[CT]all/ p'
+Call
+Tall
+
+
+5) Exclusive set ([^])
+
+In exclusive set the carat negates the set of characters in the square brackets. For instance below example prints only "Ball".
+
+[mickey]$ echo -e "Call\nTall\nBall" | sed -n '/[^CT]all/ p'
+Ball
+
+
+6) Character range ([-])
+
+When character range is provided, regular expression matches any character within the range specified in square brackets. For instance below example matches "Call" and "Tall" but not "Ball".
+
+[mickey]$ echo -e "Call\nTall\nBall" | sed -n '/[C-Z]all/ p'
+Call
+Tall
+ 
+Now let us modify the range to "A-P" and observe the result.
+
+[mickey]$ echo -e "Call\nTall\nBall" | sed -n '/[A-P]all/ p'
+Call
+Ball
+
+
+7) Zero on one occurrence (\?)
+
+In sed, question mark (\?) matches zero or one occurrence of the preceding character. For instance below example matches "Behaviour" as well as "Behavior". We have made "u" as a optional character by using "\?".
+
+[mickey]$ echo -e "Behaviour\nBehavior" | sed -n '/Behaviou\?r/ p'
+Behaviour
+Behavior
+
+
+8) One or more occurrence (\+)
+
+In sed plus symbol(\+) matches one or more occurrences of the preceding character. For instance below example matches one or more occurrences of the "2".
+
+[mickey]$ echo -e "111\n22\n123\n234\n456\n222"  | sed -n '/2\+/ p'
+22
+123
+234
+222
+
+
+9) Zero or more occurrence (*)
+
+Asterisks (*) matches the zero or more occurrence of the preceding character. For instance below example matches "ca" "cat" "catt" and so on.
+
+[mickey]$ echo -e "ca\ncat" | sed -n '/cat*/ p'
+ca
+cat
+
+
+10) Exactly N occurrences {n}
+
+{n} matches exactly "n" occurrences of the preceding character. For instance below example prints only three digit numbers. But before that create the following file which contains only numbers.
+
+[mickey]$ cat numbers.txt 
+1
+10
+100
+1000
+10000
+100000
+1000000
+10000000
+100000000
+1000000000
+
+[mickey]$ sed -n '/^[0-9]\{3\}$/ p' numbers.txt
+100
+
+Please note that pair of the curly brace is escaped by "\" character.
+
+
+11) At least N occurrences {n,}
+
+{n,} matches at least "n" occurrences of the preceding character. For instance below example prints all the numbers which are greater than or equal to five digits.
+
+[mickey]$ sed -n '/^[0-9]\{5,\}$/ p' numbers.txt
+10000
+100000
+1000000
+10000000
+100000000
+1000000000
+
+
+Please note that pair of the curly brace is escaped by "\" character.
+
+
+12) M to N occurrence {m, n}
+
+{m, n} matches at least "m" and at max "n" occurrence of the preceding character. For instance below example prints all the number which are at least 5 digit but not more than 8 digits.
+
+[mickey]$ sed -n '/^[0-9]\{5,8\}$/ p' numbers.txt
+10000
+100000
+1000000
+10000000
+
+Please note that pair of the curly brace is escaped by "\" character.
+
+13) Pipe (|)
+
+In sed pipe character behaves like logical OR operation. It matches item from either side of the pipe. For instance below example either matches "str1" or "str3".
+
+
+[mickey]$ echo -e "str1\nstr2\nstr3\nstr4" | sed -n '/str\(1\|3\)/ p'
+str1
+str3
+
+
+Please note that, the pair of the parenthesis and pipe (|) is escaped by "\" character.
+
+
+14) Escaping characters
+
+There are certain special characters, for example newline is represented by "\n", carriage return is represented by "\r" and so on. To use these characters into regular ASCII context. We have to escape them using backward slash(\) character. This chapter illustrates the escaping of the special characters.
+
+	a) Escaping "\": Below example matches the pattern "\".
+
+		[mickey]$ echo 'str1\str2' | sed -n '/\\/ p'
+		str1\str2
+
+	b) Escaping "\a": Below example matches the bell character.
+
+		[mickey]$ echo 'str1\astr2' | sed -n '/\\a/ p'
+		str1\astr2
+
+	c) Escaping "\n": Below example matches the newline character.
+
+		[mickey]$ echo 'str1\nstr2' | sed -n '/\\n/ p'
+		str1\nstr2
+
+	d) Escaping "\r": Below example matches the carriage return.
+
+		[mickey]$ echo 'str1\rstr2' | sed -n '/\\r/ p'
+		str1\rstr2
+
+	e) Escaping "\dnnn": Matches a character whose decimal ASCII value is "nnn". For instance below example matches only character "a"
+
+		[mickey]$ echo -e "a\nb\nc" | sed -n '/\d97/ p'
+		a
+ 
+ 	f) Escaping "\onnn": Matches a character whose octal ASCII value is "nnn". For instance below example matches only character "b"
+
+ 		[mickey]$ echo -e "a\nb\nc" | sed -n '/\o142/ p'
+		b
+
+	g) Escaping "\xnnn": Matches a character whose hexadecimal ASCII value is "nnn". For instance below example matches only character "c"
+
+		[mickey]$ echo -e "a\nb\nc" | sed -n '/\x63/ p'
+		c
+
+
+
+* POSIX classes of the regular expressions
+==========================================
+
+There are certain reserver words which has special meaning. These special words are referred as POSIX classes of the regular expression. This section describes the POSIX classes supported by sed.
+
+1) [:alnum:]: It implies alphabetical and numeric characters. For instance below example only matches "One" and "123", but doesn't match tab character.
+	
+	[mickey]$ echo -e "One\n123\n\t" | sed -n '/[[:alnum:]]/ p'
+	One
+	123
+
+2) [:alpha:]: It implies alphabetical characters only. For instance below example only matches word "One".
+
+	[mickey]$ echo -e "One\n123\n\t" | sed -n '/[[:alpha:]]/ p'
+	One
+
+3) [:blank:]: It implies blank character which can be either space or tab. For instance below example only matches tab character.
+
+	[mickey]$ echo -e "One\n123\n\t" | sed -n '/[[:space:]]/ p' | cat -vte
+	^I$
+
+	Please note that I have used "cat -vte" command to show tab character(^I).
+
+
+4) [:digit:]: It implies decimal numbers only. For instance below example matches only digit "123".
+
+	[mickey]$ echo -e "abc\n123\n\t" | sed -n '/[[:digit:]]/ p'
+	123
+
+5) [:lower:]: It implies lowercase letters only. For instance below example only matches "one".
+
+	[mickey]$ echo -e "one\nTWO\n\t" | sed -n '/[[:lower:]]/ p'
+	one
+
+6) [:upper:]: It implies uppercase letters only. For instance below example only matches "TWO".
+	
+	[mickey]$ echo -e "one\nTWO\n\t" | sed -n '/[[:upper:]]/ p'
+	TWO
+
+7) [:punct:]: It implies punctuation marks which includes non-space or an alphanumeric character.
+
+	[mickey]$ echo -e "One,Two\nThree\nFour" | sed -n '/[[:punct:]]/ p'
+	One,Two
+
+
+8) [:space:]: It implies the white space characters. Below example illustrates this
+	
+	[mickey]$ echo -e "One\n123\f\t" | sed -n '/[[:space:]]/ p' | cat -vte
+	123^L^I$
+
+	Please note that I have used "cat -vte" command to show tab character(^I).
+
+
+* Meta characters
+==================
+Like tradition regular expressions, sed also supports meta character. These are Perl style regular expressions. Please note that meta character support is GNU sed specific and may not work with other variants of sed. Let us discuss the meta characters in detail.
+
+1) Word boundary (\b)
+	
+	In regular expressions terminology "\b" matches the word boundary. For instance "\bthe\b" matches "the" but not "these", "there", "they", "then" and so on. Below example illustrates this.
+
+	[mickey]$ echo -e "these\nthe\nthey\nthen" | sed -n '/\bthe\b/ p'
+	the
+
+
+2) Non word boundary(\B)
+
+	In regular expression terminology "\B" matches non word boundary. For example "the\B" matches "these" and "they" but not "the". Below simple example illustrates this.
+
+	[mickey]$ echo -e "these\nthe\nthey" | sed -n '/the\B/ p'
+	these
+	they
+
+
+3) Single white space (\s)
+
+	In sed "\s" implies single white space character. For instance below example matches "Line\t1" but doesn't matches "Line1".
+
+	[mickey]$ echo -e "Line\t1\nLine2" | sed -n '/Line\s/ p'
+	Line	1
+
+
+
+4) Single non white space (\S)
+	
+	In sed "\S" implies single white space character. For instance below example matches "Line2" but doesn't matches "Line\t1".
+
+	[mickey]$ echo -e "Line\t1\nLine2" | sed -n '/Line\S/ p'
+	Line2
+
+	
+5) Single word character (\w) 
+
+	In sed "\w" implies single word character i.e. alphabetical characters, digits and underscore(_). Below example illustrates this.
+
+	[mickey]$ echo -e "One\n123\n1_2\n&;#" | sed -n '/\w/ p'
+	One
+	123
+	1_2
+
+
+6) Single non word character (\W)
+
+	In sed "\W" implies single non-word character which is exactly opposite of the "\w". Below simple example illustrates this.
+
+	[mickey]$ echo -e "One\n123\n1_2\n&;#" | sed -n '/\W/ p'
+	&;#
+
+
+7) Beginning of pattern space (\`)
+
+	In sed "\`" implies the begging of the pattern space. For instance below example only matches the "One".
+
+	[mickey]$ echo -e "One\nTwo One" | sed -n '/\`One/ p'
+	One
+
+
+========================
+Chapter-25: Sed recipes
+========================
+Sed is really amazing utility. Single problem can be solved by many ways, this is the UNIX way and sed perfectly proves that. GNU/Linux provides many useful utilities to perform our day-to-day tasks. Let us simulate few of the utilities using sed. Sometimes it may look like we are solving easy problem by hard way. But this is just to show you how powerful sed is.
+
+1) cat command
+
+In below example each line is printed as a part of default work flow.
+
+[mickey]$ sed '' books.txt 
+A Storm of Swords, George R. R. Martin
+The Two Towers, J. R. R. Tolkien
+The Alchemist, Paulo Coelho
+The Fellowship of the Ring, J. R. R. Tolkien
+The Pilgrimage, Paulo Coelho
+A Game of Thrones, George R. R. Martin 
+
+Below example uses print command to display file contents. 
+
+[mickey]$ sed -n 'p' books.txt 
+A Storm of Swords, George R. R. Martin
+The Two Towers, J. R. R. Tolkien
+The Alchemist, Paulo Coelho
+The Fellowship of the Ring, J. R. R. Tolkien
+The Pilgrimage, Paulo Coelho
+A Game of Thrones, George R. R. Martin 
+
+
+2) Remove empty lines
+
+In below example pattern "^$" implies the empty line and empty line is deleted when pattern match succeeds.
+ 
+[mickey]$ echo -e "Line #1\n\n\nLine #2" | sed '/^$/d'
+Line #1
+Line #2
+
+Similarly below example prints the line only when it is non-empty.
+
+[mickey]$ echo -e "Line #1\n\n\nLine #2" | sed -n '/^$/!p'
+Line #1
+Line #2
+
+
+3) Remove commented lines from C++ program.
+
+Let us create a sample C++ program.
+
+[mickey]$ cat hello.cpp 
+#include <iostream>
+
+using namespace std;
+
+int main(void)
+{
+	// Displays message on stdout.
+	cout << "Hello, World !!!" << endl;
+
+	return 0; // Return success.
+}
+
+
+Now remove the comments using following regular expression.
+
+[mickey]$ sed 's|//.*||g' hello.cpp 
+#include <iostream>
+
+using namespace std;
+
+int main(void)
+{
+	
+	cout << "Hello, World !!!" << endl;
+
+	return 0; 
+}
+
+ 
+
+4) Add comments before certain lines.
+
+Below example add comments before line number 3 to 5.
+
+[mickey]$ sed '3,5 s/^/#/' hello.sh 
+#!/bin/bash
+
+#pwd
+#hostname
+#uname -a
+who
+who -r
+lsb_release -a
+
+
+5) Simulation of "wc -l" command.
+
+"wc -l" command counts the number of lines present in the file. Below sed expression simulates the same.
+
+[mickey]$ sed -n '$ =' hello.sh 
+8
+
+
+6) Simulation of head command.
+
+By default head command prints the first 10 lines of the file. Let us simulate the same behaviour with sed.
+
+[mickey]$ sed '10 q' books.txt
+A Storm of Swords
+George R. R. Martin
+The Two Towers
+J. R. R. Tolkien
+The Alchemist
+Paulo Coelho
+The Fellowship of the Ring
+J. R. R. Tolkien
+The Pilgrimage
+Paulo Coelho
+
+
+
+7) Simulation of "tail -1" command.
+
+"tail -1" prints the last line of the file. Below is the simulation of the same.
+
+[mickey]$ echo -e "Line #1\nLine #2" > test.txt
+
+[mickey]$ cat test.txt 
+Line #1
+Line #2
+
+[mickey]$ sed -n '$p' test.txt 
+Line #2
+
+
+
+8) Simulation of dos2unix command.
+
+In DOS environment newline is represented by combination of CR/LF characters. Below is the simulation of "dos2unix" command which converts DOS newline character to UNIX newline character. In GNU/Linux this character is often treated as "^M" (Control M) character.
+
+[mickey]$ echo -e "Line #1\r\nLine #2\r" > test.txt
+
+[mickey]$ file test.txt 
+test.txt: ASCII text, with CRLF line terminators
+
+[mickey]$ sed 's/^M$//' test.txt > new.txt   # Press "ctrl+v" followed "ctrl+m" to generate "^M" character.
+
+[mickey]$ file new.txt 
+new.txt: ASCII text
+
+[mickey]$ cat -vte new.txt 
+Line #1$
+Line #2$
+
+
+
+9) Simulation of unix2dos command.
+ 
+Similar to "dos2unix" there is "unix2dos" command which converts UNIX newline character to DOS newline character. Below is the simulation of the same.
+
+[mickey]$ echo -e "Line #1\nLine #2" > test.txt
+
+[mickey]$ file test.txt 
+test.txt: ASCII text
+
+[mickey]$ sed 's/$/\r/' test.txt  > new.txt
+
+[mickey]$ file new.txt 
+new.txt: ASCII text, with CRLF line terminators
+
+[mickey]$ cat -vte new.txt
+Line #1^M$
+Line #2^M$
+
+
+
+10) Simulation of cat -E command.
+
+"cat -E" command shows the end of line by Dollar($) character. Below sed example is the simulation of the same.
+
+[mickey]$ echo -e "Line #1\nLine #2" > test.txt
+
+[mickey]$ cat -E test.txt 
+Line #1$
+Line #2$
+
+[mickey]$ sed 's|$|&$|' test.txt 
+Line #1$
+Line #2$
+
+
+
+11) Simulation of cat -ET command
+
+"cat -ET" command show the Dollar($) symbol at then end of each line and displays TAB character as "^I". Below is the simulation of "cat -ET" command using sed.
+
+[mickey]$ echo -e "Line #1\tLine #2" > test.txt
+
+[mickey]$ cat -ET test.txt 
+Line #1^ILine #2$
+
+[mickey]$ sed -n 'l' test.txt | sed 'y/\\t/^I/'
+Line #1^ILine #2$
+
+
+
+12) Simulation of "nl" command.
+
+"nl" command simply numbers the lines of files. Below sed script simulates this behaviour.
+ 
+[mickey]$ echo -e "Line #1\nLine #2" > test.txt
+
+[mickey]$ sed = test.txt | sed 'N;s/\n/\t/'
+1	Line #1
+2	Line #2
+
+First sed expression prints the line number follower by its contents and the second sed expression merges these two lines and converts newline character to TAB character.
+
+
+15) Simulation of cp command.
+
+"cp" command crates the another copy of the file. Below sed script simulates this behaviour.
+
+[mickey]$ sed -n 'w dup.txt' data.txt
+
+[mickey]$ diff data.txt dup.txt
+
+[mickey]$ echo $?
+0
+
+
+16) Simulation of expand command.
+
+"expand" command converts the TAB character to the spaces. Below is the simulation of the same.
+
+[mickey]$ echo -e "One\tTwo\tThree" > test.txt
+
+[mickey]$ expand test.txt > expand.txt
+
+[mickey]$ sed 's/\t/     /g' test.txt > new.txt
+
+[mickey]$ diff new.txt expand.txt 
+
+[mickey]$ echo $?
+0
+
+
+17) Simulation of tee command.
+
+"tee" command dumps the data to the standard output stream as well as file. Below is the simulation of "tee" command.
+
+[mickey]$ echo -e "Line #1\nLine #2" | tee test.txt 
+Line #1
+Line #2
+ 
+[mickey]$ sed -n 'p; w new.txt' test.txt 
+Line #1
+Line #2
+
+[mickey]$ diff new.txt test.txt 
+[mickey]$ echo $?
+0
+
+18) Simulation of cat -s command.
+
+UNIX "cat -s" command suppresses repeated empty output lines. Below is the simulation of "cat -s" command.
+
+[mickey]$ echo -e "Line #1\n\n\n\nLine #2\n\n\nLine #3" > test.txt 
+
+[mickey]$ cat -s test.txt 
+Line #1
+
+Line #2
+
+Line #3
+
+[mickey]$ sed '1s/^$//p;/./,/^$/!d' test.txt 
+Line #1
+
+Line #2
+
+Line #3
+
+
+19) Simulation of grep command.
+
+By default "grep" command prints the line when pattern match succeeds. Below is the simulation of the same.
+
+[mickey]$ echo -e "Line #1\nLine #2\nLine #3" > test.txt 
+
+[mickey]$ grep "Line #1" test.txt 
+Line #1
+
+[mickey]$ sed -n '/Line #1/p' test.txt 
+Line #1
+
+
+20) Simulation of "grep -v" command.
+
+By default "grep -v" command prints the line when pattern match doesn't succeed. Below is the simulation of the same.
+
+[mickey]$ echo -e "Line #1\nLine #2\nLine #3" > test.txt 
+
+[mickey]$ grep -v "Line #1" test.txt 
+Line #2
+Line #3
+
+[mickey]$ sed -n '/Line #1/!p' test.txt 
+Line #2
+Line #3
+
+
+21) Simulation of "tr" command.
+
+"tr" command translates the characters. Below is the simulation of the same.
+
+[mickey]$ echo "ABC" | tr "ABC" "abc"
+abc
+
+[mickey]$ echo "ABC" | sed 'y/ABC/abc/'
+abc
